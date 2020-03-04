@@ -1,13 +1,11 @@
-var socket = io();
-
 var up = false;
 var down = false;
 var left = false;
 var right = false;
 
 var middle = document.getElementById('middle');
-middle.addEventListener("touchstart", () => socket.emit('restart',{}));
-middle.addEventListener('mousedown', () => socket.emit('restart',{}));
+// middle.addEventListener("touchstart", () => socket.emit('restart',{}));
+// middle.addEventListener('mousedown', () => socket.emit('restart',{}));
 
 var upLeftButton = document.getElementById('upLeft');
 upLeftButton.addEventListener("touchstart", () => {up = true; left = true; sendDirection();});
@@ -68,6 +66,5 @@ downRightButton.addEventListener('mouseup', () => {down = false; right = false; 
 
 function sendDirection() {
   console.log([up, down, left, right]);
-  socket.emit('buttonPress', {up:up, down:down, left:left, right:right});
+  // socket.emit('buttonPress', {up:up, down:down, left:left, right:right});
 }
-// var intervalID = setInterval(sendDirection, 100);

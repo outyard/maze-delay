@@ -1,10 +1,13 @@
-var socket = io();
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 var x = 0;
 var y = 0;
 var dx = 0;
 var dy = 0;
+var left = false;
+var up = false;
+var right = false;
+var down = false;
 var playerCenter = {x:500, y:300};
 var playerRadius = 50;
 var hasCollided = false;
@@ -27,12 +30,85 @@ var mapObjects = [
 var goal = {x:3000, y:3800, radius:20};
 var fps = 100
 var speed = 4;
+var delay = 500;
 // var footstep = new Audio('gravel.mp3');
 var time = 0;
 var timeHTML = document.getElementById('time');
-var victoryTime = 0;
+var scores = [];
 
 var timeIntervalID = setInterval(increaseTimer, 1000);
+
+document.addEventListener("keydown", function(event) {
+  setTimeout(function() {
+    if (event.keyCode === 37) {
+      left = true;
+    }
+    else if (event.keyCode === 38) {
+      up = true;
+    }
+    else if (event.keyCode === 39) {
+      right = true;
+    }
+    else if (event.keyCode === 40) {
+      down = true;
+    }
+    update_dy_dx();
+  }, delay)
+});
+document.addEventListener("keyup", function(event) {
+  setTimeout(function() {
+    if (event.keyCode === 37) {
+      left = false;
+    }
+    else if (event.keyCode === 38) {
+      up = false;
+    }
+    else if (event.keyCode === 39) {
+      right = false;
+    }
+    else if (event.keyCode === 40) {
+      down = false;
+    }
+    update_dy_dx()
+  }, delay);
+  if ((event.keyCode === 13 || event.keyCode === 32)
+  && (hasCollided || hasWon)) {
+    x = 0;
+    y = 0;
+    hasCollided = false;
+    hasWon = false;
+    time = 0;
+    drawIntervalID = setInterval(draw, 1000/fps);
+    timeIntervalID = setInterval(increaseTimer, 1000);
+  }
+});
+
+function update_dy_dx(){
+  if (up && !down){
+    dy = speed;
+    playerCenter.y = 295;
+  }
+  else if (down && !up) {
+    dy = -speed;
+    playerCenter.y = 305;
+  }
+  else {
+    dy = 0;
+    playerCenter.y = 300;
+  }
+  if (left &&!right){
+    dx = speed;
+    playerCenter.x = 495;
+  }
+  else if (right &&! left) {
+    dx = -speed;
+    playerCenter.x = 505;
+  }
+  else {
+    dx = 0;
+    playerCenter.x = 500;
+  }
+}
 
 function increaseTimer(){
   time += 1;
@@ -81,6 +157,7 @@ function checkCollition(){
     -y+playerCenter.y-playerRadius < goal.y-goal.radius
   ){
     hasWon = true;
+    scores.push(time);
     console.log("Grattis!");
     console.log("Time: " + timeHTML.innerHTML);
   }
@@ -103,50 +180,25 @@ function draw() {
     ctx.clearRect(-4000, -4000, canvas.width+4000, canvas.height+4000);
     clearInterval(drawIntervalID);
     clearInterval(timeIntervalID);
-
+    ctx.fillStyle = "#000";
+    ctx.font = "16px Arial";
+    ctx.fillText("You died", 10, 560);
+    ctx.fillText("Press space to restart", 10, 580);
   }
   else if (hasWon) {
-    victoryTime = time;
     clearInterval(drawIntervalID);
     clearInterval(timeIntervalID);
+    ctx.beginPath();
+    ctx.fillStyle = "#EEE";
+    ctx.lineWidth = 100;
+    ctx.rect(5, 534, 200, 56);
+    ctx.fill();
+    ctx.fillStyle = "#468936";
+    ctx.closePath();
+    ctx.fillStyle = "#000";
+    ctx.font = "16px Arial";
+    ctx.fillText("Congratulations, you won!", 10, 560);
+    ctx.fillText("Press space to restart", 10, 580);
   }
 }
 var drawIntervalID = setInterval(draw, 1000/fps);
-
-socket.on('buttonPress', function(press){
-  if (press.up && !press.down){
-    dy = speed;
-    playerCenter.y = 295;
-  }
-  else if (press.down && !press.up) {
-    dy = -speed;
-    playerCenter.y = 305;
-  }
-  else {
-    dy = 0;
-    playerCenter.y = 300;
-  }
-  if (press.left &&!press.right){
-    dx = speed;
-    playerCenter.x = 495;
-  }
-  else if (press.right &&!press.left) {
-    dx = -speed;
-    playerCenter.x = 505;
-  }
-  else {
-    dx = 0;
-    playerCenter.x = 500;
-  }
-});
-socket.on('restart', function(press){
-  if (hasCollided || hasWon) {
-    x=0;
-    y=0;
-    hasCollided = false
-    hasWon = false;
-    time = 0;
-    drawIntervalID = setInterval(draw, 1000/fps);
-    timeIntervalID = setInterval(increaseTimer, 1000);
-  }
-});
